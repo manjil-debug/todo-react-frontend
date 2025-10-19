@@ -5,14 +5,14 @@ const Dashboard = () => {
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [newTask, setNewTask] = useState({ title: "", description: "" });
+  const [creating, setCreating] = useState(false);
 
   const fetchTodos = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await api.get("/todos/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setTodos(response.data);
     } catch (err) {
@@ -27,57 +27,135 @@ const Dashboard = () => {
     fetchTodos();
   }, []);
 
-    const handleStatusUpdate = async (todoId) => {
+  const handleStatusUpdate = async (todoId) => {
     try {
-        const token = localStorage.getItem("token");
-
-        await api.put(`/todos/${todoId}/status`, null, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        params: {
-            completed: true, // <-- sent as query parameter
-        },
-        });
-
-        // Refresh the todos list after successful update
-        fetchTodos();
+      const token = localStorage.getItem("token");
+      await api.put(`/todos/${todoId}/status`, null, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { completed: true },
+      });
+      fetchTodos();
     } catch (err) {
-        console.error("Failed to update status:", err);
-        setError("Failed to update todo status");
+      console.error("Failed to update status:", err);
+      setError("Failed to update todo status");
     }
-    };
+  };
 
+  const handleCreateTask = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    setError("");
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
+    try {
+      const token = localStorage.getItem("token");
+      const payload = {
+        title: newTask.title,
+        description: newTask.description,
+        completed: false,
+      };
+
+      await api.post("/todos/", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setNewTask({ title: "", description: "" });
+      fetchTodos(); // Refresh the list
+    } catch (err) {
+      console.error("Failed to create task:", err);
+      setError("Failed to create new task");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="alert alert-danger">{error}</div>
+      </div>
+    );
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Your Todo List</h1>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border rounded-lg">
-          <thead className="bg-gray-100">
+    <div className="container py-5">
+      <h1 className="text-center mb-4">Your Todo List</h1>
+
+      {/* Create New Task Form */}
+      <div className="card mb-4 shadow-sm p-3">
+        <h5 className="mb-3">Create New Task</h5>
+        <form className="row g-3" onSubmit={handleCreateTask}>
+          <div className="col-md-5">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Title"
+              value={newTask.title}
+              onChange={(e) =>
+                setNewTask({ ...newTask, title: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div className="col-md-5">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Description"
+              value={newTask.description}
+              onChange={(e) =>
+                setNewTask({ ...newTask, description: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div className="col-md-2 d-grid">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={creating}
+            >
+              {creating ? (
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                ></span>
+              ) : null}
+              Add Task
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Todo Table */}
+      <div className="table-responsive">
+        <table className="table table-bordered table-hover shadow-sm">
+          <thead className="table-light">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {todos.map((todo) => (
               <tr key={todo.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{todo.title}</td>
-                <td className="px-6 py-4">{todo.description}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td>{todo.title}</td>
+                <td>{todo.description}</td>
+                <td>
                   {todo.completed ? (
-                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                      Completed
-                    </span>
+                    <span className="badge bg-success">Completed</span>
                   ) : (
                     <button
+                      className="btn btn-danger btn-sm"
                       onClick={() => handleStatusUpdate(todo.id)}
-                      className="px-4 py-2 text-xs font-semibold rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
                     >
                       Pending
                     </button>
