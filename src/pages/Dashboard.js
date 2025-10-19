@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 const Dashboard = () => {
@@ -7,7 +8,9 @@ const Dashboard = () => {
   const [error, setError] = useState("");
   const [newTask, setNewTask] = useState({ title: "", description: "" });
   const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
 
+  // Fetch todos
   const fetchTodos = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -27,6 +30,7 @@ const Dashboard = () => {
     fetchTodos();
   }, []);
 
+  // Update todo status
   const handleStatusUpdate = async (todoId) => {
     try {
       const token = localStorage.getItem("token");
@@ -41,6 +45,7 @@ const Dashboard = () => {
     }
   };
 
+  // Create new task
   const handleCreateTask = async (e) => {
     e.preventDefault();
     setCreating(true);
@@ -59,13 +64,19 @@ const Dashboard = () => {
       });
 
       setNewTask({ title: "", description: "" });
-      fetchTodos(); // Refresh the list
+      fetchTodos();
     } catch (err) {
       console.error("Failed to create task:", err);
       setError("Failed to create new task");
     } finally {
       setCreating(false);
     }
+  };
+
+  // Logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
   };
 
   if (loading)
@@ -86,7 +97,13 @@ const Dashboard = () => {
 
   return (
     <div className="container py-5">
-      <h1 className="text-center mb-4">Your Todo List</h1>
+      {/* Header with Logout */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="text-center flex-grow-1">Your Todo List</h1>
+        <button className="btn btn-outline-secondary" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
 
       {/* Create New Task Form */}
       <div className="card mb-4 shadow-sm p-3">

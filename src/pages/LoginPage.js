@@ -37,7 +37,7 @@ const LoginPage = () => {
   return (
     <div className="vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="card shadow-lg p-4 rounded-4" style={{ maxWidth: "400px", width: "100%" }}>
-        <h2 className="text-center mb-4">Welcome Back</h2>
+        <h2 className="text-center mb-4">Fast-api Ract Todo App</h2>
 
         {error && (
           <div className="alert alert-danger" role="alert">
