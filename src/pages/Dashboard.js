@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import "bootstrap/dist/js/bootstrap.bundle.min.js"; // Required for Bootstrap tooltips
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const Dashboard = () => {
   const [todos, setTodos] = useState([]);
@@ -11,7 +11,6 @@ const Dashboard = () => {
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch todos
   const fetchTodos = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -29,14 +28,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTodos();
-    // Initialize Bootstrap tooltips
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach((tooltipTriggerEl) => {
       new window.bootstrap.Tooltip(tooltipTriggerEl);
     });
   }, []);
 
-  // Update todo status
   const handleStatusUpdate = async (todoId) => {
     try {
       const token = localStorage.getItem("token");
@@ -51,24 +48,16 @@ const Dashboard = () => {
     }
   };
 
-  // Create new task
   const handleCreateTask = async (e) => {
     e.preventDefault();
     setCreating(true);
     setError("");
-
     try {
       const token = localStorage.getItem("token");
-      const payload = {
-        title: newTask.title,
-        description: newTask.description,
-        completed: false,
-      };
-
+      const payload = { ...newTask, completed: false };
       await api.post("/todos/", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setNewTask({ title: "", description: "" });
       fetchTodos();
     } catch (err) {
@@ -79,7 +68,6 @@ const Dashboard = () => {
     }
   };
 
-  // Logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/");
@@ -101,6 +89,10 @@ const Dashboard = () => {
       </div>
     );
 
+  // Calculate completed and pending counts
+  const completedCount = todos.filter((t) => t.completed).length;
+  const pendingCount = todos.filter((t) => !t.completed).length;
+
   return (
     <div className="container py-5">
       {/* Header with Logout */}
@@ -111,9 +103,11 @@ const Dashboard = () => {
         </button>
       </div>
 
-      {/* Total tasks */}
-      <div className="mb-3">
-        <strong>Total Tasks: {todos.length}</strong>
+      {/* Task counts */}
+      <div className="mb-3 d-flex gap-3">
+        <span><strong>Total Tasks:</strong> {todos.length}</span>
+        <span><strong>Completed:</strong> {completedCount}</span>
+        <span><strong>Pending:</strong> {pendingCount}</span>
       </div>
 
       {/* Create New Task Form */}
@@ -150,12 +144,12 @@ const Dashboard = () => {
               className="btn btn-primary"
               disabled={creating}
             >
-              {creating ? (
+              {creating && (
                 <span
                   className="spinner-border spinner-border-sm me-2"
                   role="status"
                 ></span>
-              ) : null}
+              )}
               Add Task
             </button>
           </div>
