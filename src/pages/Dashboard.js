@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import "bootstrap/dist/js/bootstrap.bundle.min.js"; // Required for Bootstrap tooltips
 
 const Dashboard = () => {
   const [todos, setTodos] = useState([]);
@@ -28,6 +29,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTodos();
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach((tooltipTriggerEl) => {
+      new window.bootstrap.Tooltip(tooltipTriggerEl);
+    });
   }, []);
 
   // Update todo status
@@ -99,10 +105,15 @@ const Dashboard = () => {
     <div className="container py-5">
       {/* Header with Logout */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="text-center flex-grow-1">Your Todo List</h1>
+        <h1 className="text-center flex-grow-1">Tasks</h1>
         <button className="btn btn-outline-secondary" onClick={handleLogout}>
           Logout
         </button>
+      </div>
+
+      {/* Total tasks */}
+      <div className="mb-3">
+        <strong>Total Tasks: {todos.length}</strong>
       </div>
 
       {/* Create New Task Form */}
@@ -152,36 +163,50 @@ const Dashboard = () => {
       </div>
 
       {/* Todo Table */}
-      <div className="table-responsive">
-        <table className="table table-bordered table-hover shadow-sm">
-          <thead className="table-light">
-            <tr>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {todos.map((todo) => (
-              <tr key={todo.id}>
-                <td>{todo.title}</td>
-                <td>{todo.description}</td>
-                <td>
-                  {todo.completed ? (
-                    <span className="badge bg-success">Completed</span>
-                  ) : (
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleStatusUpdate(todo.id)}
-                    >
-                      Pending
-                    </button>
-                  )}
-                </td>
+      <div className="card shadow-sm p-3">
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-light">
+              <tr>
+                <th>S.N.</th>
+                <th>Tasks</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {todos.map((todo, index) => (
+                <tr
+                  key={todo.id}
+                  title={todo.description}
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                >
+                  <td>{index + 1}</td>
+                  <td
+                    style={{
+                      textDecoration: todo.completed ? "line-through" : "none",
+                      color: todo.completed ? "#6c757d" : "#212529",
+                    }}
+                  >
+                    {todo.title}
+                  </td>
+                  <td>
+                    {todo.completed ? (
+                      <span className="badge bg-success">Completed</span>
+                    ) : (
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleStatusUpdate(todo.id)}
+                      >
+                        Pending
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
